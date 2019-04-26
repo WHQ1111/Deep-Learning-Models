@@ -38,9 +38,7 @@ def data_type():
   return tf.float16 if FLAGS.use_fp16 else tf.float32
 
 
-class PTBInput(object):
-  """The input data."""
-
+class PTBInput(object):# 输入数据
   def __init__(self, config, data, name=None):
     self.batch_size = batch_size = config.batch_size
     self.num_steps = num_steps = config.num_steps
@@ -49,9 +47,7 @@ class PTBInput(object):
         data, batch_size, num_steps, name=name)
 
 
-class PTBModel(object):
-  """The PTB model."""
-
+class PTBModel(object):#模型
   def __init__(self, is_training, config, input_):
     self._is_training = is_training
     self._input = input_
@@ -76,10 +72,10 @@ class PTBModel(object):
         "softmax_w", [size, vocab_size], dtype=data_type())
     softmax_b = tf.get_variable("softmax_b", [vocab_size], dtype=data_type())
     logits = tf.nn.xw_plus_b(output, softmax_w, softmax_b)
-     # Reshape logits to be a 3-D tensor for sequence loss
+    # 将logits变成3-D的张量
     logits = tf.reshape(logits, [self.batch_size, self.num_steps, vocab_size])
 
-    # Use the contrib sequence loss and average over the batches
+    # 使用contrib序列损失并对批次进行平均
     loss = tf.contrib.seq2seq.sequence_loss(
         logits,
         input_.targets,
@@ -87,7 +83,7 @@ class PTBModel(object):
         average_across_timesteps=False,
         average_across_batch=True)
 
-    # Update the cost
+    # 更新损失函数
     self._cost = tf.reduce_sum(loss)
     self._final_state = state
 
@@ -114,7 +110,6 @@ class PTBModel(object):
       return self._build_rnn_graph_lstm(inputs, config, is_training)
 
   def _build_rnn_graph_cudnn(self, inputs, config, is_training):
-    """Build the inference graph using CUDNN cell."""
     inputs = tf.transpose(inputs, [1, 0, 2])
     self._cell = tf.contrib.cudnn_rnn.CudnnLSTM(
         num_layers=config.num_layers,
@@ -164,15 +159,6 @@ class PTBModel(object):
 
     self._initial_state = cell.zero_state(config.batch_size, data_type())
     state = self._initial_state
-    # Simplified version of tf.nn.static_rnn().
-    # This builds an unrolled LSTM for tutorial purposes only.
-    # In general, use tf.nn.static_rnn() or tf.nn.static_state_saving_rnn().
-    #
-    # The alternative version of the code below is:
-    #
-    # inputs = tf.unstack(inputs, num=self.num_steps, axis=1)
-    # outputs, state = tf.nn.static_rnn(cell, inputs,
-    #                                   initial_state=self._initial_state)
     outputs = []
     with tf.variable_scope("RNN"):
       for time_step in range(self.num_steps):

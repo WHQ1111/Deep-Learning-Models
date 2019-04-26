@@ -8,7 +8,7 @@ import csv
 
 # 定义超参数
 BATCH_SIZE=100
-NUM_ITERS=100000
+NUM_ITERS=50000
 tau0=1.0  # 初始temperature参数
 np_temp=tau0
 np_lr=0.001
@@ -58,8 +58,8 @@ q_y = tf.nn.softmax(logits_y)
 
 kl_tmp = tf.reshape(q_y*(tf.log(q_y+1e-20)-tf.log(1.0/K)),[-1,N,K])
 KL = tf.reduce_sum(kl_tmp,[1,2])#输出分布与均匀分布(先验)的KL散度
-ML = tf.reduce_mean(tf.reduce_sum(x*tf.log(p_x)+(1-x)*tf.log(1-p_x),1))
-Elbo=ML - KL
+ML = tf.reduce_mean(tf.reduce_sum(x*tf.log(p_x)+(1-x)*tf.log(1-p_x),1))#计算交叉熵损失
+Elbo= ML - KL
 loss=tf.reduce_mean(-Elbo)
 
 global_step = tf.Variable(0)
@@ -99,29 +99,18 @@ def save_anim(data,figsize,filename):
 save_anim(np_x1,(28,28),'real.gif')
 save_anim(np_x2,(28,28),'generator.gif')
 
-
 # 数据可视化
 M=100*N
 np_y = np.zeros((M,K))
 np_y[range(M),np.random.choice(K,M)] = 1
 np_y = np.reshape(np_y,[100,N,K]) #从先验中采样的隐变量
 np_x= sess.run(p_x,{y:np_y}) #生成样本
-f,axarr=plt.subplots(1,2,figsize=(15,15))
-
-## 可视化采样的隐变量 (100,30,10)->(10,10,30,10)->(10,1,10,30,10)->(1,10,30,100)->(10,1,1,30,100)->(1,1,300,100)->(300,100)
-np_y = np_y.reshape((10,10,N,K))
-np_y = np.concatenate(np.split(np_y,10,axis=0),axis=3)#(1,10,30,100)
-np_y = np.concatenate(np.split(np_y,10,axis=1),axis=2)#(1,1,300,100)
-y_img = np.squeeze(np_y) #(300,100)
-axarr[0].matshow(y_img,cmap=plt.cm.gray)
-axarr[0].set_title('Z Samples')
-
 ## 可视化生成的图像 (100,784)->(10,10,28,28)->(10,1,10,28,28)->(1,10,28,280)->(10,1,1,28,280)->(1,1,280,280)->(280,280)
 np_x = np_x.reshape((10,10,28,28))
 np_x = np.concatenate(np.split(np_x,10,axis=0),axis=3)#(1,10,28,280)
 np_x = np.concatenate(np.split(np_x,10,axis=1),axis=2)#(1,1,280,280)
 x_img = np.squeeze(np_x)#(280,280)
-axarr[1].imshow(x_img,cmap=plt.cm.gray,interpolation='none')
-axarr[1].set_title('Generated Images')
-f.tight_layout()
-f.savefig('Visualization.png')
+fig = plt.figure(figsize=(10,10))
+plt.imshow(x_img,cmap='Greys_r')
+plt.savefig('figures.png')
+plt.close(fig)

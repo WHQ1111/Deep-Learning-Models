@@ -48,10 +48,10 @@ with tf.name_scope('input_shape'):
 with tf.name_scope('D_var'):
     D_W1 = tf.Variable(W_init([784,128]))
     variable_summaries(D_W1,'D_var/D_W1')
-    
+
     D_b1 = tf.Variable(tf.zeros([128]))
     variable_summaries(D_b1,'D_var/D_b1')
-    
+
     D_W2 = tf.Variable(W_init([128,1]))
     variable_summaries(D_W2,'D_var/D_W2')
     

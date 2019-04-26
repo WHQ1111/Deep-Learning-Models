@@ -40,6 +40,5 @@ class PtbReaderTest(tf.test.TestCase):
         coord.request_stop()
         coord.join()
 
-
 if __name__ == "__main__":
   tf.test.main()
